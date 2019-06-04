@@ -1,4 +1,5 @@
 from random import random
+from io import TextIOWrapper
 from hashlib import sha256, md5
 from os import remove as os_remove
 
@@ -9,9 +10,22 @@ class InvalidHashingAlgorithm(NonCipherError): pass
 
 TRY_TO_DECRYPT = '~\tW\x17\x14|\x0b\x11L^\x12d\n\x04\x04\x15\x01\x15\x16D@\x0b\x15\x04\x18\\QFE\x1e^\\KV\nFk\x11\x15RB^^RYFYP\x06TQW\x0c\x06\x03WR\x0fV\x01W\x07\x06\x05\x06\x02QU\x01R\x08\x06\x07ZQT\\RY\r\x08SV\x00US\rP\x02Q\x06\x04\x08\x08W\n\x02\x00RQ\x07\x07TV\nQ\x03\x06S\x03'
 # |                                                              |
-# |                                                              |                 
+# v                                                              |                 
 # PEP 8, Sorry :'(                                               |
 # First letter is 'O', last is '6'. String is readable. Good luck!
+
+class NonOpen(TextIOWrapper):
+    '''Like a standart TextIOWrapper but after read removes file'''
+    def read(self,remove_temp=True):
+        '''      
+        kwarg remove_temp -- if True - remove file after read
+            |                      |
+            (type must be int(bool))
+        '''        
+        string = open(self.name,self._read_mode).read()   
+        if remove_temp: os_remove(self.name)
+        return string
+        
 
 class NonTempFile:
     '''
@@ -64,7 +78,7 @@ class NonCipher:
             |                  |
             (type must be str or bytes)
 
-        arg iterations: iterations count.
+        arg iterations -- iterations count.
             Note that the larger the number, the longer it takes to
             generate the input key.  Do not put the number > 200,000
             if you do not want to wait, if you are want to get better
@@ -92,7 +106,7 @@ class NonCipher:
             |                  |
             (type must be bytes)
 
-        arg iterations: iterations count.
+        arg iterations -- iterations count.
             Note that the larger the number, the longer it takes to
             generate the input key.  Do not put the number > 200,000
             if you do not want to wait, if you are want to get better
@@ -100,7 +114,7 @@ class NonCipher:
                 |                |
                 (type must be int)
 
-        kwarg algorithm: hashing algorithm.
+        kwarg algorithm -- hashing algorithm.
             For SafePassword default is MD5 but for NonCipher
             it's SHA256. Other alorithms will be threw an error
                 |                |
@@ -205,10 +219,15 @@ class NonCipher:
         '''
         function for encrypting and decrypting strings
 
-        arg string: string for encrypting
+        arg string -- string for encrypting
             |                         |
             (type must be str or bytes)
-            
+        
+        kwarg write_temp -- If True, writes the encrypted/decrypted 
+        symbols to the file, instead of writing to the RAM.  
+        After encryption, a two-element tuple returns — (file_name, file-like object)
+        
+             
         '''
         if not self._keys_for_cipher:
             raise KeysNotSettedError(
@@ -241,8 +260,10 @@ class NonCipher:
                 if write_temp:
                     ts = total_string
                     ts.close()
-                    return (ts._temp_file_name, 
-                        open(ts._temp_file_name,ts._read_type))
+                    text_io_wrapper = open(ts._temp_file_name,ts._read_type)
+                    non_open = NonOpen(text_io_wrapper)
+                    non_open._read_mode = ts._read_type
+                    return (ts._temp_file_name, non_open)
                 else:
                     return total_string
                     
