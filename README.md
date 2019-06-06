@@ -3,7 +3,7 @@
 * **SafePassword(SP) is an incredibly simple program, the meaning of which rolls down only in one loop. Please read the basic code at the link above, since SP is the main thing in this program.**
 
 # <h5> You can easy install NonCipher via pip
-`pip install --update NonCipher`
+`pip install --upgrade NonCipher`
 
 First of all, **three arguments** are passed to the main NonCipher class: **password**, **secret word**, **number of iterations**. 
 
