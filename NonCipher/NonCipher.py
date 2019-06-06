@@ -83,7 +83,7 @@ class NonCipher:
             |                         |
             (type must be str or bytes)
 
-        kwarg salt -- your secret_word{or salt} for hashing
+        kwarg secret_word -- your secret_word{or salt} for hashing
             |                         |
             (type must be str or bytes)
 
