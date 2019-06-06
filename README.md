@@ -135,9 +135,9 @@ encrypted_file = nc.cipher(file_bytes)
 nc.init() # if your file weighs more than 4096 bytes
 decrypted_file = nc.cipher(encrypted_string)
 ```
-_**It looks simple, but am I going to keep a 500-mb file in RAM? Are you an idiot?**_
+__*It looks simple, but am I going to keep a 500-mb file in RAM? Are you an idiot?__*
 
-NC can write encrypted characters **to a file instead of being stored in memory**. For this, it is worthwhile to simply put **kwarg** write_temp` to `True`. In some cases, because of this, the encryption speed increases. If `write_temp` is set to `True`, `nc.cipher(..)` returns a two-element tuple: **the name of the temporary file, a file-like object that is ready to read.** After reading the file_like object, **the temporary file will be deleted.** If you **don't** want this, set `remove_temp` to `False`. Below is an example.
+NC can write encrypted characters **to a file instead of being stored in memory**. For this, it is worthwhile to simply put **kwarg** `write_temp` to `True`. In some cases, because of this, the encryption speed increases. If `write_temp` is set to `True`, `nc.cipher(..)` returns a two-element tuple: **the name of the temporary file, a file-like object that is ready to read.** After reading the file_like object, **the temporary file will be deleted.** If you **don't** want this, set `remove_temp` to `False`. Below is an example.
 ```
 from NonCipher import NonCipher
 
