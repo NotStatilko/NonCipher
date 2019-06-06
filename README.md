@@ -154,6 +154,36 @@ Or
 
 `encrypted_string = encrypted_file[1].read(remove_temp=False) # Temporary file is not deleted`
 
+# <h4> Multiprocessing
+
+To begin, you create a NonCipher class object with the standard configuration, after you have executed the `nc.init()` method - take two necessary parameters from there that will allow you to implement multi(processing/threading) `nc._password_hash`,`nc.hash_of_nc_setup`.
+
+After that you will be able to create a new object of the NonCipher class in each process, and pass the **input hash** and the NonCipher **setup hash** to the same arguments.  After `nc.init()` execution, the input hash will not be created, but the one you entered will be used, which means you do not need to wait for the time to create the **input hash**
+
+My example below
+```
+from NonCipher import NonCipher
+from multiprocessing import Process
+
+nc = NonCipher('password','secret_word',1)
+nc.init()
+
+nc_password_hash = nc._password_hash
+nc_hash_of_nc_setup = nc._hash_of_nc_setup
+
+file = open('picture.jpg','rb').read()
+
+def nc_process_test(ph,hons):
+    nc = NonCipher(password_hash=ph,
+        hash_of_nc_setup=hons)
+    nc.init()
+    
+    print(nc.cipher(file,write_temp=True))
+
+for i in range(5):
+    args = (nc_password_hash,nc_hash_of_nc_setup)
+    Process(target=nc_process_test,args=args).start()
+```
 # <h5> It seems that this is all. More detailed information about each method of each NonCipher class can be obtained using the built-in function Python `help(NonCipher)`.
 
 **Open Issue, swear my English, and also don't forget - PHP is trash.**

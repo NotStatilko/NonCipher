@@ -7,6 +7,7 @@ class NonCipherError(BaseException): pass
 class HashNotSettedError(NonCipherError): pass
 class KeysNotSettedError(NonCipherError): pass
 class InvalidHashingAlgorithm(NonCipherError): pass
+class InvalidConfigurationError(NonCipherError): pass
 
 TRY_TO_DECRYPT = '~\tW\x17\x14|\x0b\x11L^\x12d\n\x04\x04\x15\x01\x15\x16D@\x0b\x15\x04\x18\\QFE\x1e^\\KV\nFk\x11\x15RB^^RYFYP\x06TQW\x0c\x06\x03WR\x0fV\x01W\x07\x06\x05\x06\x02QU\x01R\x08\x06\x07ZQT\\RY\r\x08SV\x00US\rP\x02Q\x06\x04\x08\x08W\n\x02\x00RQ\x07\x07TV\nQ\x03\x06S\x03'
 # |                                                              |
@@ -20,12 +21,12 @@ class NonOpen(TextIOWrapper):
         '''      
         kwarg remove_temp -- if True - remove file after read
             |                      |
-            (type must be int(bool))
+            (type must be int(bool))           
         '''        
         string = open(self.name,self._read_mode).read()   
         if remove_temp: os_remove(self.name)
         return string
-        
+
 
 class NonTempFile:
     '''
@@ -67,31 +68,83 @@ class NonTempFile:
 class NonCipher:
     '''
     Main NonCipher class.
+    
+    Note: To implement multithreading, 
+    all args are now kwargs, but you have 
+    to choose one thing: either set a 
+    password, a secret word, and the number of iterations, 
+    or password_hash and hash_of_nc_setup. 
+    
+    Examples below.
     '''
-    def __init__(self,password,secret_word,iterations):
+    def __init__(self,password=None,secret_word=None,iterations=None,password_hash=None,hash_of_nc_setup=None):
         '''
-        arg password -- your password
-            |                  |
+        kwarg password -- your password
+            |                         |
             (type must be str or bytes)
 
-        arg salt -- your secret_word{or salt} for hashing
-            |                  |
+        kwarg salt -- your secret_word{or salt} for hashing
+            |                         |
             (type must be str or bytes)
 
-        arg iterations -- iterations count.
+        kwarg iterations -- iterations count.
             Note that the larger the number, the longer it takes to
             generate the input key.  Do not put the number > 200,000
             if you do not want to wait, if you are want to get better
             crypto-resistance - put more than 200,000
                 |                |
-                (type must be int)                
-        '''
-        self._password = password if isinstance(password,bytes) else password.encode()
-        self._secret_word = secret_word if isinstance(secret_word,bytes) else secret_word.encode()
-        self._iterations = iterations if iterations > 0 else 1
-        self._password_hash = None
-        self._keys_for_cipher = None
-        self._hash_of_nc_setup = None
+                (type must be int)
+                
+        kwarg password_hash -- hash from your setup from past NonCipher obj
+            you can get it with non_cipher_object._password_hash
+                |                  |
+                (type must be bytes)
+        
+        kwarg hash_of_nc_setup -- setup hash from your past NonCipher obj
+            you can get it with non_cipher_object._hash_of_nc_setup
+                |                  |
+                (type must be bytes)
+               
+        {Example} NonCipher with multiprocessing
+        
+        from NonCipher import NonCipher
+        from multiprocessing import Process
+        
+        nc = NonCipher('password','secret_word',1)
+        nc.init()
+        
+        nc_password_hash = nc._password_hash
+        nc_hash_of_nc_setup = nc._hash_of_nc_setup
+        
+        file = open('picture.jpg','rb').read()
+        
+        def nc_process_test(ph,hons):
+            nc = NonCipher(password_hash=ph,
+                hash_of_nc_setup=hons)
+            nc.init()
+            
+            print(nc.cipher(file,write_temp=True))
+        
+        for i in range(5):
+            args = (nc_password_hash,nc_hash_of_nc_setup)
+            Process(target=nc_process_test,args=args).start()
+        '''              
+
+        if all((password,secret_word,iterations)):
+            self._password = password if isinstance(password,bytes) else password.encode()
+            self._secret_word = secret_word if isinstance(secret_word,bytes) else secret_word.encode()
+            self._iterations = iterations if iterations > 0 else 1
+            self._password_hash = None
+            self._keys_for_cipher = None
+            self._hash_of_nc_setup = None
+            
+        elif all((password_hash,hash_of_nc_setup)):
+            self._password = None
+            self._password_hash = password_hash            
+            self._hash_of_nc_setup = hash_of_nc_setup
+        
+        else:
+            raise InvalidConfigurationError('Please run help(NonCipher)')
 
     @staticmethod
     def get_hash_of(password,salt,iterations,algorithm='sha256'):
@@ -116,10 +169,10 @@ class NonCipher:
 
         kwarg algorithm -- hashing algorithm.
             For SafePassword default is MD5 but for NonCipher
-            it's SHA256. Other alorithms will be threw an error
+            it's sha256. Other alorithms will be threw an error
                 |                |
                 (type must be str)
-
+        
         '''
         if algorithm == 'sha256':
             hash_a = sha256
@@ -135,7 +188,7 @@ class NonCipher:
 
     def __get_keys_for_cipher(self,hash=None):
         '''
-        private function to get 64 starting hashes(by SHA256 algorithm).
+        private function to get 64 starting hashes(by sha256 algorithm).
             Used as a password. If the text is longer than 4096 characters,
             new ones will be generated from the last existing hash
 
@@ -203,15 +256,16 @@ class NonCipher:
                 |
                 # Hello, World!.......
         '''
-        self._password_hash = self.get_hash_of(self._password,
-            self._secret_word,self._iterations).encode()
-        for_hashing = (
-            self._password
-            + self._secret_word
-            + str(self._iterations).encode() 
-            + self._password_hash
-        )
-        self._hash_of_nc_setup = sha256(for_hashing).hexdigest().encode()
+        if self._password:
+            self._password_hash = self.get_hash_of(self._password,
+                self._secret_word,self._iterations).encode()
+            for_hashing = (
+                self._password
+                + self._secret_word
+                + str(self._iterations).encode() 
+                + self._password_hash
+            )
+            self._hash_of_nc_setup = sha256(for_hashing).hexdigest().encode()
         self.__get_keys_for_cipher()
 
 
@@ -225,9 +279,7 @@ class NonCipher:
         
         kwarg write_temp -- If True, writes the encrypted/decrypted 
         symbols to the file, instead of writing to the RAM.  
-        After encryption, a two-element tuple returns — (file_name, file-like object)
-        
-             
+        After encryption, a two-element tuple returns — (file_name, file-like object)                    
         '''
         if not self._keys_for_cipher:
             raise KeysNotSettedError(
