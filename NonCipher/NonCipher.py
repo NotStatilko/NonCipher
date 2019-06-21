@@ -1,5 +1,5 @@
 from random import random
-from io import TextIOWrapper
+from io import TextIOWrapper, BufferedReader
 from hashlib import sha256, md5
 from os import remove as os_remove
 
@@ -214,7 +214,6 @@ class NonCipher:
             ]
             return self._keys_for_cipher
 
-
     def init(self):
         '''
         function to initialize and reset the
@@ -259,6 +258,7 @@ class NonCipher:
         if self._password:
             self._password_hash = self.get_hash_of(self._password,
                 self._secret_word,self._iterations).encode()
+                
             for_hashing = (
                 self._password
                 + self._secret_word
@@ -269,17 +269,19 @@ class NonCipher:
         self.__get_keys_for_cipher()
 
 
-    def cipher(self,string,write_temp=False):
+    def cipher(self,string_or_flo,write_temp=False):
         '''
         function for encrypting and decrypting strings
-
-        arg string -- string for encrypting
-            |                         |
-            (type must be str or bytes)
+                                                 |
+        arg string_or_flo -- string or file-like |
+            object(readable) for encrypting      |
+                |                                |
+                (type must be str or bytes or flo)
         
         kwarg write_temp -- If True, writes the encrypted/decrypted 
-        symbols to the file, instead of writing to the RAM.  
-        After encryption, a two-element tuple returns — (file_name, file-like object)                    
+            symbols to the file, instead of writing to the RAM.  
+            After encryption, a two-element tuple returns — 
+               — (file_name, file-like object)                    
         '''
         if not self._keys_for_cipher:
             raise KeysNotSettedError(
@@ -287,25 +289,28 @@ class NonCipher:
         else:
             password = ''.join(self._keys_for_cipher)
             try:
-                index = 0
+                index = 0                                            
+                if isinstance(string_or_flo,(BufferedReader,TextIOWrapper)):                             
+                    string_or_flo = string_or_flo.read() #raises error if file not readable             
+                        
                 if write_temp:
-                    if isinstance(string,bytes):
+                    if isinstance(string_or_flo,bytes):
                         total_string = NonTempFile(string_type='bytes')
                     else:
-                        total_string = NonTempFile()
-                else:                        
-                    total_string = b'' if isinstance(string,bytes) else ''
+                        total_string = NonTempFile(string_type='str')
+                else:                                         
+                    total_string = b'' if isinstance(string_or_flo,bytes) else ''
                     
-                for all in string:
+                for all in string_or_flo:
                     if len(password) == index:
                         self.__get_keys_for_cipher(self._keys_for_cipher[-1].encode())
                         password = ''.join(self._keys_for_cipher)
                         index = 0
-                        
-                    if not isinstance(string,bytes):
-                        total_string += chr(ord(all) ^ ord(password[index]))
+                                        
+                    if isinstance(string_or_flo,bytes):
+                        total_string += bytes([all ^ ord(password[index])])                    
                     else:
-                        total_string += bytes([all ^ ord(password[index])])
+                        total_string += chr(ord(all) ^ ord(password[index]))
                         
                     index += 1
                     
@@ -320,10 +325,7 @@ class NonCipher:
                     return total_string
                     
             except Exception as e:
-                raise NonCipherError(
-                    '''Error in NonCipher! '''
-                    f'''Can\'t Encrypt | Decrypt string | {e,type(e)}'''
-                )
+                raise NonCipherError('Error in NonCipher!', e,type(e))
 
 if __name__ == '__main__':
     string = 'Hello, World!'
@@ -336,4 +338,4 @@ if __name__ == '__main__':
     nc_invalid.init()
     bad_decrypted_string = nc_invalid.cipher(encrypted_string)
 
-    print([bad_decrypted_string])
+    print([encrypted_string,bad_decrypted_string])
