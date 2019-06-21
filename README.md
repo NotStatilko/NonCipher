@@ -129,13 +129,12 @@ from NonCipher import NonCipher
 nc = NonCipher('password', 'secret_word', 1)
 nc.init()
 
-file_bytes = open('cats.png', 'rb').read()
-
-encrypted_file = nc.cipher(file_bytes)
-nc.init() # if your file weighs more than 4096 bytes
-decrypted_file = nc.cipher(encrypted_string)
+with open('cats.png', 'rb') as f:
+    encrypted_file = nc.cipher(f)
+    nc.init() # if your file weighs more than 4096 bytes
+    decrypted_file = nc.cipher(encrypted_file)
 ```
-__*It looks simple, but am I going to keep a 500-mb file in RAM? Are you an idiot?__*
+__*It looks simple, but am I going to keep a 500-mb file in RAM? Are you an idiot?*__
 
 NC can write encrypted characters **to a file instead of being stored in memory**. For this, it is worthwhile to simply put **kwarg** `write_temp` to `True`. In some cases, because of this, the encryption speed increases. If `write_temp` is set to `True`, `nc.cipher(..)` returns a two-element tuple: **the name of the temporary file, a file-like object that is ready to read.** After reading the file_like object, **the temporary file will be deleted.** If you **don't** want this, set `remove_temp` to `False`. Below is an example.
 ```
@@ -144,15 +143,15 @@ from NonCipher import NonCipher
 nc = NonCipher('password', 'secret_word', 1)
 nc.init()
 
-file_bytes = open('cats.png', 'rb').read()
-
-encrypted_file = nc.cipher(file_bytes, write_temp=True) # Two-element tuple
-
-encrypted_string = encrypted_file[1].read() # Temporary file is deleted
+with open('cats.png', 'rb') as f:
+    encrypted_file = nc.cipher(f, write_temp=True) # Returns two-element tuple
+    encrypted_string = encrypted_file[1].read() # Temporary file will be removed after read
 ```
-Or
+Or if you don't want the temporary file to be deleted:
 
-`encrypted_string = encrypted_file[1].read(remove_temp=False) # Temporary file is not deleted`
+```
+encrypted_string = encrypted_file[1].read(remove_temp=False) # Temporary file is not removed
+```
 
 # <h4> Multiprocessing
 
@@ -186,4 +185,4 @@ for i in range(5):
 ```
 # <h5> It seems that this is all. More detailed information about each method of each NonCipher class can be obtained using the built-in function Python `help(NonCipher)`.
 
-**Open Issue, swear my English, and also don't forget - PHP is trash.**
+**Open Issue, swear my English, and also don't forget - All programming languages is good;)**
