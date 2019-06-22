@@ -69,13 +69,33 @@ class NonCipher:
     '''
     Main NonCipher class.
     
-    Note: To implement multithreading, 
+    Note: To implement multi(processing/threading), 
     all args are now kwargs, but you have 
     to choose one thing: either set a 
     password, a secret word, and the number of iterations, 
     or password_hash and hash_of_nc_setup. 
     
-    Examples below.
+    {Example} NonCipher with multiprocessing
+        
+        from NonCipher import NonCipher
+        from multiprocessing import Process
+        
+        nc = NonCipher('password','secret_word',1)
+        nc.init()
+        
+        def nc_process_test(ph,hons):
+            nc = NonCipher(
+                password_hash=ph,
+                hash_of_nc_setup=hons
+            )
+            nc.init()            
+            
+            with open('picture.jpg','rb') as f:
+                print(nc.cipher(f,write_temp=True))
+        
+        for i in range(5):
+            args = (nc._password_hash,nc._hash_of_nc_setup)
+            Process(target=nc_process_test,args=args).start()
     '''
     def __init__(self,password=None,secret_word=None,iterations=None,password_hash=None,hash_of_nc_setup=None):
         '''
@@ -89,9 +109,9 @@ class NonCipher:
 
         kwarg iterations -- iterations count.
             Note that the larger the number, the longer it takes to
-            generate the input key.  Do not put the number > 200,000
+            generate the input hash.  Do not put the number > 5,000,000
             if you do not want to wait, if you are want to get better
-            crypto-resistance - put more than 200,000
+            crypto-resistance - put more than 5,000,000
                 |                |
                 (type must be int)
                 
@@ -103,33 +123,8 @@ class NonCipher:
         kwarg hash_of_nc_setup -- setup hash from your past NonCipher obj
             you can get it with non_cipher_object._hash_of_nc_setup
                 |                  |
-                (type must be bytes)
-               
-        {Example} NonCipher with multiprocessing
-        
-        from NonCipher import NonCipher
-        from multiprocessing import Process
-        
-        nc = NonCipher('password','secret_word',1)
-        nc.init()
-        
-        nc_password_hash = nc._password_hash
-        nc_hash_of_nc_setup = nc._hash_of_nc_setup
-        
-        file = open('picture.jpg','rb').read()
-        
-        def nc_process_test(ph,hons):
-            nc = NonCipher(password_hash=ph,
-                hash_of_nc_setup=hons)
-            nc.init()
-            
-            print(nc.cipher(file,write_temp=True))
-        
-        for i in range(5):
-            args = (nc_password_hash,nc_hash_of_nc_setup)
-            Process(target=nc_process_test,args=args).start()
+                (type must be bytes)             
         '''              
-
         if all((password,secret_word,iterations)):
             self._password = password if isinstance(password,bytes) else password.encode()
             self._secret_word = secret_word if isinstance(secret_word,bytes) else secret_word.encode()
@@ -149,7 +144,7 @@ class NonCipher:
     @staticmethod
     def get_hash_of(password,salt,iterations,algorithm='sha256'):
         '''
-        function for getting SafePassword{Input key in NonCipher}
+        function for getting SafePassword{Input hash in NonCipher}
 
         arg password -- password for hashing
             |                  |
@@ -161,9 +156,9 @@ class NonCipher:
 
         arg iterations -- iterations count.
             Note that the larger the number, the longer it takes to
-            generate the input key.  Do not put the number > 200,000
+            generate the input hash.  Do not put the number > 5,000,000
             if you do not want to wait, if you are want to get better
-            crypto-resistance - put more than 200,000
+            crypto-resistance - put more than 5,000,000
                 |                |
                 (type must be int)
 
@@ -204,13 +199,17 @@ class NonCipher:
         if not self._password_hash:
             raise HashNotSettedError(
                 'For first you have to set hash via non_cipher_object.init()')
-        else:
-            decoded_hash = hash.decode()
+        else:            
+            unique_numbers = set([
+                *sha256(self._password_hash).digest(),
+                *sha256(self._hash_of_nc_setup).digest(),
+                *sha256(self._password_hash + self._hash_of_nc_setup).digest()
+            ])                                                                
             self._keys_for_cipher = [
                 self.get_hash_of(
-                    hash, self._hash_of_nc_setup, ord(i)
+                    hash, self._hash_of_nc_setup, i
                 )
-                for i in decoded_hash
+                for i in list(unique_numbers)[:64]
             ]
             return self._keys_for_cipher
 
