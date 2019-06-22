@@ -51,12 +51,16 @@ Next, another 64 is created from the **input hash**, they form the first list of
 
 And they are created like this:
 ```
-hash = self._password_hash
+unique_numbers = set([
+    *sha256(self._password_hash).digest(),
+    *sha256(self._hash_of_nc_setup).digest(),
+    *sha256(self._password_hash + self._hash_of_nc_setup).digest()
+])                                                                
 self._keys_for_cipher = [
     self.get_hash_of(
-        hash, self._hash_of_nc_setup, ord(i)
+        hash, self._hash_of_nc_setup, i
     )
-    for i in hash
+    for i in list(unique_numbers)[:64]
 ]
 ```
 **If the text is longer than 4096 characters - NonCipher will create a new selection of hashes from the last existing** `self._keys_for_cipher`, similar to the **input hash**. And then everything is encrypted with a simple [XOR algorithm](https://en.m.wikipedia.org/wiki/XOR_cipher).
