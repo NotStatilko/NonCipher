@@ -1,7 +1,7 @@
 from random import random
-from io import TextIOWrapper, BufferedReader
 from hashlib import sha256, md5
 from os import remove as os_remove
+from io import TextIOWrapper, BufferedReader
 
 class NonCipherError(BaseException): pass
 class HashNotSettedError(NonCipherError): pass
@@ -9,11 +9,13 @@ class KeysNotSettedError(NonCipherError): pass
 class InvalidHashingAlgorithm(NonCipherError): pass
 class InvalidConfigurationError(NonCipherError): pass
 
-TRY_TO_DECRYPT = '~\tW\x17\x14|\x0b\x11L^\x12d\n\x04\x04\x15\x01\x15\x16D@\x0b\x15\x04\x18\\QFE\x1e^\\KV\nFk\x11\x15RB^^RYFYP\x06TQW\x0c\x06\x03WR\x0fV\x01W\x07\x06\x05\x06\x02QU\x01R\x08\x06\x07ZQT\\RY\r\x08SV\x00US\rP\x02Q\x06\x04\x08\x08W\n\x02\x00RQ\x07\x07TV\nQ\x03\x06S\x03'
+__version__ = '3.0'
+
+TRY_TO_DECRYPT = '{_\x05\x1eB}\nB\x17\n\x13f\rUY@\x07\x19\x18EA\x0c\x12PF\x0f\x03C\x15\x1cU\\\x1a\x0c]A=GD\x07FPTX\\D^\x05\x06V\tQ\x06\x05\x03\x05\x01U\x04\x07\x00\x0f\x02\x03TT\x05RTSR\x00V\x0b\\\x03\x0eV\\\x00\x01QT\x04QS\x05\x06V\x03\x06\x05[\x07Q]V\t\x07PSPWS\x0e\x00W\x00R\x01'
 # |                                                              |
 # v                                                              |                 
 # PEP 8, Sorry :'(                                               |
-# First letter is 'O', last is '6'. String is readable. Good luck!
+# First symbol is 'O', last is '6'. String is readable. Good luck!
 
 class NonOpen(TextIOWrapper):
     '''Like a standart TextIOWrapper but after read removes file'''
