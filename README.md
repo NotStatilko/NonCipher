@@ -56,7 +56,7 @@ self._keys_for_cipher = [
     self.get_hash_of(
         hash, self._hash_of_nc_setup, ord(i)
     )
-    for i in decoded_hash
+    for i in hash
 ]
 ```
 **If the text is longer than 4096 characters - NonCipher will create a new selection of hashes from the last existing** `self._keys_for_cipher`, similar to the **input hash**. And then everything is encrypted with a simple [XOR algorithm](https://en.m.wikipedia.org/wiki/XOR_cipher).
