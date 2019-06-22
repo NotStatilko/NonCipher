@@ -9,7 +9,7 @@ class KeysNotSettedError(NonCipherError): pass
 class InvalidHashingAlgorithm(NonCipherError): pass
 class InvalidConfigurationError(NonCipherError): pass
 
-__version__ = '3.0'
+__version__ = '3.1'
 
 TRY_TO_DECRYPT = '{_\x05\x1eB}\nB\x17\n\x13f\rUY@\x07\x19\x18EA\x0c\x12PF\x0f\x03C\x15\x1cU\\\x1a\x0c]A=GD\x07FPTX\\D^\x05\x06V\tQ\x06\x05\x03\x05\x01U\x04\x07\x00\x0f\x02\x03TT\x05RTSR\x00V\x0b\\\x03\x0eV\\\x00\x01QT\x04QS\x05\x06V\x03\x06\x05[\x07Q]V\t\x07PSPWS\x0e\x00W\x00R\x01'
 # |                                                              |
