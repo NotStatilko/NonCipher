@@ -31,8 +31,8 @@ nc.init()
 ```
 This is worth paying attention to, since the more iterations there are(*__in our case, only one for example, never do it for God's sake. Ok? Ok.__*) the longer(obviously) it takes time to create an **primary hash**.
 
-If you are ready to wait, you can set up > **5,000,000**, **so only 1/3 of your input hash may take quite a long time to pick up**.
-After initialization, you can view **your input hash**, and make sure that it is impossible to pick it up.
+If you are ready to wait, you can set up > **5,000,000**, **so only 1/3 of your primary hash may take quite a long time to pick up**.
+After initialization, you can view **your primary hash**, and make sure that it is impossible to pick it up.
 ```
 from NonCipher import NonCipher
 
