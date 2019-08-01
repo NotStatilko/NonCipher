@@ -152,7 +152,9 @@ with open('cats.png', 'rb') as f:
 ```
 Or if you don't want the temporary file to be deleted:
 
-```encrypted_string = encrypted_file[1].read(remove_temp=False) # Temporary file is not removed````
+```
+encrypted_string = encrypted_file[1].read(remove_temp=False) # Temporary file is not removed
+```
 
 # <h2> Multiprocessing
 
