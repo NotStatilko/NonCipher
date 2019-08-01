@@ -170,8 +170,6 @@ from multiprocessing import Process
 nc = NonCipher('password','secret_word',1)
 nc.init()
 
-file = open('picture.jpg')
-
 def nc_process_test(file,ph,hoid):
     nc = NonCipher(primary_hash=ph, hash_of_input_data=hoid)
     nc.init()
