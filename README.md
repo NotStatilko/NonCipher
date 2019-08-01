@@ -17,7 +17,8 @@ nc = NonCipher('password', 'secret_word', 1)
 The line above in pseudo-code looks like this:
 ```
 for _ in range(iterations{1}):
-    primary_hash = sha512(primary_hash)
+    primary_hash = sha256(primary_hash)
+return sha512(primary_hash)
 ```
 
 In NonCipher, I called the very first hash "__primary hash__"
@@ -69,7 +70,7 @@ In fact, it was a complete description of the algorithm. I came up with it mysel
 ```
 from NonCipher import NonCipher, TRY_TO_DECRYPT
 
-nc = NonCipher (?,?,?)
+nc = NonCipher(?,?,?)
 nc.init()
 
 print(nc.cipher(TRY_TO_DECRYPT))
@@ -151,7 +152,7 @@ with open('cats.png', 'rb') as f:
 ```
 Or if you don't want the temporary file to be deleted:
 
-`encrypted_string = encrypted_file[1].read(remove_temp=False) # Temporary file is not removed`
+```encrypted_string = encrypted_file[1].read(remove_temp=False) # Temporary file is not removed````
 
 # <h2> Multiprocessing
 
