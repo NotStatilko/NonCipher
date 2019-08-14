@@ -175,9 +175,10 @@ def nc_process_test(file,ph,hoid):
     nc.init()
     print(nc.cipher(file,write_temp=True))
 
-for i in range(5):
-    args = (open('cats.png'),nc._primary_hash,nc._hash_of_input_data)
-    Process(target=nc_process_test,args=args).start()
+if __name__ == '__main__':
+    for i in range(5):
+        args = (open('cats.png'),nc._primary_hash,nc._hash_of_input_data)
+        Process(target=nc_process_test,args=args).start()
 ```
 
 # <h2> NCv4.X and encryption in different processes
