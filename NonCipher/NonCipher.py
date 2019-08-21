@@ -158,7 +158,7 @@ class NonCipher:
     '''
     Main NonCipher class.
 
-    GitHub repository: github.com/NotStatilko/NonCipher
+    GitHub repository: bit.ly/NonCipher
 
     Note: To implement multi(processing/threading),
     all args are now kwargs, but you have
@@ -166,54 +166,39 @@ class NonCipher:
     password, a secret word, and the number of iterations,
     or primary_hash and hash_of_input_data.
 
-    {Example} NonCipher with multiprocessing
+    kwarg password -- your password
+        (type must be str | bytes)
 
-        from NonCipher import NonCipher
-        from multiprocessing import Process
+    kwarg secret_word -- your secret_word{salt} for hashing
+        (type must be str | bytes)
 
-        nc = NonCipher('password','secret_word',1)
-        nc.init()
+    kwarg iterations -- iterations count.
+        Note that the larger the number, the longer it takes to
+        generate the primary hash. Do not put the number > 5,000,000
+        if you don't want to wait, if you are want to get better
+        crypto-resistance - put more than 5,000,000
+            (type must be int)
 
-        def nc_process_test(ph,hoid):
-            nc = NonCipher(
-                primary_hash=ph,
-                hash_of_input_data=hoid
-            )
-            nc.init()
+    kwarg primary_hash -- hash from your input data from past NonCipher obj
+        you can get it with non_cipher_object._primary_hash
+            (type must be bytes)
 
-            with open('picture.jpg','rb') as f:
-                print(nc.cipher(f,write_temp=True))
+    kwarg hash_of_input_data -- hash of input data from your past NonCipher obj
+        you can get it with non_cipher_object._hash_of_input_data
+            (type must be bytes)
 
-        if __name__ == '__main__':
-            for i in range(5):
-                args = (nc._primary_hash,nc._hash_of_input_data)
-                Process(target=nc_process_test,args=args).start()
+    kwargs test -- if specified - sets the input data for test
+        (PASSWORD,SECRET_WORD,1)
+            (type must be int(bool))
     '''
-    def __init__(self,password=None,secret_word=None,iterations=None,primary_hash=None,hash_of_input_data=None):
-        '''
-        kwarg password -- your password
-            (type must be str | bytes)
-
-        kwarg secret_word -- your secret_word{salt} for hashing
-            (type must be str | bytes)
-
-        kwarg iterations -- iterations count.
-            Note that the larger the number, the longer it takes to
-            generate the primary hash. Do not put the number > 5,000,000
-            if you don't want to wait, if you are want to get better
-            crypto-resistance - put more than 5,000,000
-                (type must be int)
-
-        kwarg primary_hash -- hash from your input data from past NonCipher obj
-            you can get it with non_cipher_object._primary_hash
-                (type must be bytes)
-
-        kwarg hash_of_input_data -- hash of input data from your past NonCipher obj
-            you can get it with non_cipher_object._hash_of_input_data
-                (type must be bytes)
-        '''
+    def __init__(self,password=None,secret_word=None,iterations=None,primary_hash=None,hash_of_input_data=None,test=False):
         self.cipher_process_count = 10
         self.__cipher_process_part_number = None
+        if test:
+            password = b'PASSWORD'
+            secret_word = b'SECRET_WORD'
+            iterations = 1
+
         if all((password,secret_word,iterations)):
             self._password = password if isinstance(password,bytes) else password.encode()
             self._secret_word = secret_word if isinstance(secret_word,bytes) else secret_word.encode()
