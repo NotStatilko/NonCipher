@@ -22,7 +22,7 @@ class InvalidHashingAlgorithm(NonCipherError): pass
 class InvalidConfigurationError(NonCipherError): pass
 class TextTooSmallError(NonCipherError): pass
 
-__version__ = '4.0'
+__version__ = '4.1'
 
 TRY_TO_DECRYPT = ('''y^V\x19D|X\x11\x19^\x17iXR\x05AT\x19E\x16FZAW'''
     '''\x12\x0bS\x15\x10HT\x07JX\\\x16:JARBP\rR^F\x01'''
