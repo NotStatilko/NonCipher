@@ -454,7 +454,7 @@ class NonCipher:
                         else:
                             total_string = NonTempFile(string_type='bytes',filename=token_hex(8) + '.ncfile')
                 else:
-                    if isinstance(what,(TextIOWrapper,BufferedReader)):
+                    if isinstance(what,(TextIOWrapper,BufferedReader,FileByParts)):
                         total_string = b'' if 'b' in what.mode else ''
                     else:
                         total_string = b'' if isinstance(what,bytes) else ''
