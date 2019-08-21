@@ -1,9 +1,19 @@
 import os
-from secrets import token_hex
 from types import GeneratorType
 from hashlib import sha256, sha512, md5
 from multiprocessing import Process, Queue
 from io import TextIOWrapper, BufferedReader
+
+try:
+    from secrets import token_hex
+except:
+    from random import random
+    def token_hex(size):
+        '''
+        this function in NonCipher used only for generating
+        filenames. this token_hex has limit for size - 64
+        '''
+        return sha512(str(random()).encode()).hexdigest()[:size*2]
 
 class NonCipherError(BaseException): pass
 class HashNotSettedError(NonCipherError): pass
