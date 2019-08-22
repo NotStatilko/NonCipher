@@ -11,7 +11,9 @@ The **secret_word** in the hashing language is, in fact, **salt**.
 
 ```
 from NonCipher import NonCipher
+
 nc = NonCipher('password', 'secret_word', 1)
+nc.init()
 ```
 
 The line above in pseudo-code looks like this:
@@ -24,12 +26,7 @@ return sha512(primary_hash)
 In NonCipher, I called the very first hash "__primary hash__"
 
 To create a **primary hash** you need to use the class method `.init()`
-```
-from NonCipher import NonCipher
 
-nc = NonCipher('password', 'secret_word', 1)
-nc.init()
-```
 This is worth paying attention to, since the more iterations there are(*__in our case, only one for example, never do it for God's sake. Ok? Ok.__*) the longer(obviously) it takes time to create an **primary hash**.
 
 If you are ready to wait, you can set up > **5,000,000**, **so only 1/3 of your primary hash may take quite a long time to pick up**.
