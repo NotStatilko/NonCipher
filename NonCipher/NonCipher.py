@@ -169,6 +169,7 @@ class NonCipher:
     Main NonCipher class.
 
     GitHub repository: bit.ly/NonCipher
+        https://github.com/NotStatilko/NonCipher
 
     Note: To implement multi(processing/threading),
     all args are now kwargs, but you have
