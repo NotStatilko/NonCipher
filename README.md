@@ -47,7 +47,7 @@ Also you can see the hash of your input data(**password**, **secret_word**, **it
 
 Next, another 64 is created from the **primary hash**, they form the first list of hashes, from which a single **password of 4096 characters** is obtained during encryption.
 
-And they are created like this(pseudocode):
+And they are created like this:
 ```
 unique_numbers = set([
     *sha256(self._primary_hash).digest(),
