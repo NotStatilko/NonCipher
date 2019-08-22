@@ -201,6 +201,11 @@ This file can be decrypted both by the **"processor"** and the **default** metho
 
 I, perhaps, will not go into big details. You can always look at the code, or open the Issue and ask.
 
-# <h5> It seems that this is all. More detailed information about each method of each NonCipher class can be obtained using the built-in function Python `help(NonCipher)`.
+# <h4> Bitcoin address for support <3
+```
+bc1qksvmzhjy79z85v035ehdq4v9tcfqgaqq7jga8a
+```
+
+# <h4> It seems that this is all. More detailed information about each method of each NonCipher class can be obtained using the built-in function Python `help(NonCipher)`.
 
 **Open Issue, swear my English, and also don't forget - All programming languages is good;)**
