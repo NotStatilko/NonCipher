@@ -158,7 +158,7 @@ encrypted_string = encrypted_file[1].read(remove_temp=False) # Temporary file is
 
 # <h2> Multiprocessing
 
-To begin, you create a NonCipher class object with the standard configuration, after you have executed the `nc.init()` method - take two necessary parameters from there that will allow you to implement multi(processing/threading) `nc._primary_hash`,`nc.hash_of_input_data`.
+To begin, you create a NonCipher class object with the standard configuration, after you have executed the `nc.init()` method - take two necessary parameters from there that will allow you to implement multi(processing/threading) `nc._primary_hash`,`nc._hash_of_input_data`.
 
 After that you will be able to create a new object of the NonCipher class in each process, and pass the **primary hash** and the NonCipher **hash of input data** to the same arguments. After `nc.init()` execution, the **primary hash** will not be created, but the one you entered will be used, which means you don't need to wait for the time to create the **primary hash**
 
