@@ -107,3 +107,4 @@ venv.bak/
 test.py
 *.nc_temp
 *.ncfile
+password_block_*
