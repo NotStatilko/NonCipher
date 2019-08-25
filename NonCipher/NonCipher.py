@@ -1,5 +1,5 @@
 import os
-from types import GeneratorType
+from collections.abc import Iterable
 from hashlib import sha256, sha512, md5
 from multiprocessing import Process, Queue
 from io import TextIOWrapper, BufferedReader
@@ -21,8 +21,9 @@ class BlockNotSettedError(NonCipherError): pass
 class InvalidHashingAlgorithm(NonCipherError): pass
 class InvalidConfigurationError(NonCipherError): pass
 class TextTooSmallError(NonCipherError): pass
+class NotIterableError(NonCipherError): pass
 
-__version__ = '4.1'
+__version__ = '4.2'
 
 TRY_TO_DECRYPT = ('''y^V\x19D|X\x11\x19^\x17iXR\x05AT\x19E\x16FZAW'''
     '''\x12\x0bS\x15\x10HT\x07JX\\\x16:JARBP\rR^F\x01'''
@@ -212,6 +213,15 @@ class NonCipher:
             iterations = 1
 
         if all((password,secret_word,iterations)):
+            if not isinstance(password,(str,bytes)):
+                raise InvalidConfigurationError('password type must be str or bytes, not ' + repr(type(password)))
+
+            if not isinstance(secret_word,(str,bytes)):
+                raise InvalidConfigurationError('secret_word type must be str or bytes, not ' + repr(type(secret_word)))
+
+            if not isinstance(iterations,int):
+                raise InvalidConfigurationError('iterations type must be int, not ' + repr(type(iterations)))
+
             self._password = password if isinstance(password,bytes) else password.encode()
             self._secret_word = secret_word if isinstance(secret_word,bytes) else secret_word.encode()
             self._iterations = iterations if iterations > 0 else 1
@@ -220,6 +230,14 @@ class NonCipher:
             self._block = None
 
         elif all((primary_hash,hash_of_input_data)):
+            if not isinstance(primary_hash,bytes):
+                raise InvalidConfigurationError(
+                    'primary_hash type must be bytes(encoded hash), not ' + repr(type(primary_hash))
+                )
+            if not isinstance(hash_of_input_data,bytes):
+                raise InvalidConfigurationError(
+                    'hash_of_input_data type must be bytes(encoded hash), not ' + repr(type(hash_of_input_data))
+                )
             self._password = None
             self._primary_hash = primary_hash
             self._hash_of_input_data = hash_of_input_data
@@ -334,13 +352,21 @@ class NonCipher:
         '''
         function for encrypting and decrypting encrypted by NonCipher strings.
 
-        arg what -- string, generator, or file-like
-            object(readable) for encrypting
-                (type must be str | bytes | file-like-object | GeneratorType)
+        arg what -- string, generator, file-like bject{readable}
+            for encrypting, or iterable object
+
+            Note that any iterable object must return one
+            character(str or bytes) at a time.
+
+            E.g: def test(string):
+                    for i in string[::2]:
+                        yield i
+
+            (type must be str | bytes | file-like-object)
 
         kwarg write_temp -- If True, writes the encrypted/decrypted
             symbols to the file, instead of writing to the RAM.
-            Returns a two-element tuple - (file_name.ncfile, file-like object)
+            Returns a two-element tuple - ('file_name.ncfile', file-like object)
                (type must be int(bool))
 
         kwarg run_in_processes -- If True, NonCipher divides
@@ -348,17 +374,23 @@ class NonCipher:
             and encrypts it in different processes.
             Each process will write to the file, so
             there is no point in specifying a write_temp.
+
             Due to this, the speed increases by many times.
             Be careful if you have a slow computer.
-                (type must be int(bool))
 
-        kwarg queue -- If specified, put the encrypted data in the queue.
-            If write_temp is True, a two-element tuple inserts into the Queue,
-            the second element of which will be the file name.
-                (must be any Queue class. For example queue.Queue)
+            (type must be int(bool))
+
+        kwarg queue -- If specified, put the encrypted data into queue.
+            If write_temp is True:
+                e.g: ({'pid':<process_id>,'filename.ncfile'})
+
+            If write_temp is False:
+                e.g: ({'pid':<process_id>,<encrypted_string>})
+
+            (must be multiprocessing.Queue)
 
         kwarg cipher_process_count_for_now -- if specified, encrypts in parts
-            in processes without use and changing self.cipher_process_count.
+            in processes without use and changing self.cipher_process_count
                 (type must be int)
         '''
         if not self._block:
@@ -485,13 +517,13 @@ class NonCipher:
                             self._block = self.__get_hash_blocks(self._block[-1].encode())
                             password = ''.join(self._block); index = 0
 
-                        if isinstance(what,(str,GeneratorType)):
-                            total_string += chr(ord(symbols) ^ ord(password[index]))
-
-                        elif isinstance(what,bytes):
+                        if isinstance(what,bytes):
                             total_string += bytes([symbols ^ ord(password[index])])
+
+                        elif isinstance(what,(Iterable)):
+                            total_string += chr(ord(symbols) ^ ord(password[index]))
                         else:
-                            total_string += bytes([ord(symbols) ^ ord(password[index])])
+                            raise NotIterableError(what,'has not method __iter__')
 
                         index += 1
 
@@ -507,12 +539,12 @@ class NonCipher:
                         open(total_string._temp_filename,total_string._read_type)
                     )
                     if queue:
-                        queue.put(('__FROM_PROCESS__',total_string._temp_filename))
+                        queue.put(({'pid':os.getpid()},total_string._temp_filename))
                     else:
                         return (total_string._temp_filename,non_open)
                 else:
                     if queue:
-                        queue.put(total_string)
+                        queue.put(({'pid':os.getpid()},total_string))
                     else:
                         return total_string
 
@@ -530,6 +562,7 @@ if __name__ == '__main__':
     nc_incorrect.init()
     bad_decrypted_string = nc_incorrect.cipher(encrypted_string)
 
+    print('--@ Version:',__version__,'(NCv' + __version__ + ')','\n')
     print('> Correct Primary Hash:',nc_correct._primary_hash,'\n')
     print('>> Incorrect Primary Hash:',nc_incorrect._primary_hash,'\n')
     print('>>> Test:',[encrypted_string,bad_decrypted_string])
