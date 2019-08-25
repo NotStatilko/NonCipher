@@ -1,6 +1,6 @@
 ﻿# <h2> NonCipher - The encryption algorithm that was based on [SafePassword](https://pastebin.com/srfVetG6).
 
-* **SafePassword is an incredibly simple program, the meaning of which rolls down only in one loop. Please read the basic code at the link above, since SafePassword is the main thing in this program.**
+**SafePassword is an incredibly simple program, the meaning of which rolls down only in one loop. Please read the basic code at the link above, since SafePassword is the main thing in this program.**
 
 # <h5> You can easy install NonCipher via pip
 `pip install -U NonCipher`
@@ -11,7 +11,9 @@ The **secret_word** in the hashing language is, in fact, **salt**.
 
 ```
 from NonCipher import NonCipher
+
 nc = NonCipher('password', 'secret_word', 1)
+nc.init()
 ```
 
 The line above in pseudo-code looks like this:
@@ -24,12 +26,7 @@ return sha512(primary_hash)
 In NonCipher, I called the very first hash "__primary hash__"
 
 To create a **primary hash** you need to use the class method `.init()`
-```
-from NonCipher import NonCipher
 
-nc = NonCipher('password', 'secret_word', 1)
-nc.init()
-```
 This is worth paying attention to, since the more iterations there are(*__in our case, only one for example, never do it for God's sake. Ok? Ok.__*) the longer(obviously) it takes time to create an **primary hash**.
 
 If you are ready to wait, you can set up > **5,000,000**, **so only 1/3 of your primary hash may take quite a long time to pick up**.
@@ -50,7 +47,7 @@ Also you can see the hash of your input data(**password**, **secret_word**, **it
 
 Next, another 64 is created from the **primary hash**, they form the first list of hashes, from which a single **password of 4096 characters** is obtained during encryption.
 
-And they are created like this(pseudocode):
+And they are created like this:
 ```
 unique_numbers = set([
     *sha256(self._primary_hash).digest(),
@@ -158,7 +155,7 @@ encrypted_string = encrypted_file[1].read(remove_temp=False) # Temporary file is
 
 # <h2> Multiprocessing
 
-To begin, you create a NonCipher class object with the standard configuration, after you have executed the `nc.init()` method - take two necessary parameters from there that will allow you to implement multi(processing/threading) `nc._primary_hash`,`nc.hash_of_input_data`.
+To begin, you create a NonCipher class object with the standard configuration, after you have executed the `nc.init()` method - take two necessary parameters from there that will allow you to implement multi(processing/threading) `nc._primary_hash`,`nc._hash_of_input_data`.
 
 After that you will be able to create a new object of the NonCipher class in each process, and pass the **primary hash** and the NonCipher **hash of input data** to the same arguments. After `nc.init()` execution, the **primary hash** will not be created, but the one you entered will be used, which means you don't need to wait for the time to create the **primary hash**
 
@@ -201,6 +198,11 @@ This file can be decrypted both by the **"processor"** and the **default** metho
 
 I, perhaps, will not go into big details. You can always look at the code, or open the Issue and ask.
 
-# <h5> It seems that this is all. More detailed information about each method of each NonCipher class can be obtained using the built-in function Python `help(NonCipher)`.
+# <h4> Bitcoin address for support <3
+```
+bc1qksvmzhjy79z85v035ehdq4v9tcfqgaqq7jga8a
+```
+
+# <h4> It seems that this is all. More detailed information about each method of each NonCipher class can be obtained using the built-in function Python `help(NonCipher)`.
 
 **Open Issue, swear my English, and also don't forget - All programming languages is good;)**
