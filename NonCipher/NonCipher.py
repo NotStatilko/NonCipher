@@ -23,7 +23,7 @@ class InvalidConfigurationError(NonCipherError): pass
 class TextTooSmallError(NonCipherError): pass
 class NotIterableError(NonCipherError): pass
 
-__version__ = '4.2'
+__version__ = '4.3'
 
 TRY_TO_DECRYPT = ('''y^V\x19D|X\x11\x19^\x17iXR\x05AT\x19E\x16FZAW'''
     '''\x12\x0bS\x15\x10HT\x07JX\\\x16:JARBP\rR^F\x01'''
@@ -432,7 +432,7 @@ class NonCipher:
                     text_generator = FileByParts(what.name,'rb',part_size=part_size)
                     password_generator = FileByParts(block_as_flo.name,'rb',part_size=part_size)
 
-                    queue = Queue() if not queue else queue
+                    queue_nc = Queue()
                     part_number = 0
                     while True:
                         try:
@@ -457,7 +457,7 @@ class NonCipher:
 
                         Process(target=nc_object.cipher,
                             args=(text_part_temp_name,),
-                            kwargs={'write_temp':True,'queue':queue}).start()
+                            kwargs={'write_temp':True,'queue':queue_nc}).start()
 
                         part_number += 1
 
@@ -467,7 +467,7 @@ class NonCipher:
 
                     encrypted_parts = []
                     while len(encrypted_parts) < part_number:
-                        encrypted_parts.append(queue.get())
+                        encrypted_parts.append(queue_nc.get()[1])
                     encrypted_parts.sort()
 
                     password_generator.remove()
@@ -476,9 +476,9 @@ class NonCipher:
                     for i in range(len(encrypted_parts)):
                         with open(total_encrypted_filename,'ab') as f:
                             encrypted_part = encrypted_parts.pop(0)
-                            with open(encrypted_part[1],'rb') as e_part:
+                            with open(encrypted_part,'rb') as e_part:
                                 f.write(e_part.read())
-                            os.remove(encrypted_part[1])
+                            os.remove(encrypted_part)
 
                     non_open = NonOpen(open(total_encrypted_filename,'rb'))
                     return (total_encrypted_filename,non_open)
@@ -520,8 +520,12 @@ class NonCipher:
                         if isinstance(what,bytes):
                             total_string += bytes([symbols ^ ord(password[index])])
 
+                        elif isinstance(what,FileByParts):
+                             total_string += bytes([ord(symbols) ^ ord(password[index])])
+
                         elif isinstance(what,(Iterable)):
                             total_string += chr(ord(symbols) ^ ord(password[index]))
+
                         else:
                             raise NotIterableError(what,'has not method __iter__')
 
@@ -548,7 +552,7 @@ class NonCipher:
                     else:
                         return total_string
 
-            except Exception as e:
+            except OSError as e:
                 raise NonCipherError('Error in NonCipher!', e,type(e))
 
 if __name__ == '__main__':
