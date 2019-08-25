@@ -17,7 +17,7 @@ except:
 
 class NonCipherError(BaseException): pass
 class HashNotSettedError(NonCipherError): pass
-class KeysNotSettedError(NonCipherError): pass
+class BlockNotSettedError(NonCipherError): pass
 class InvalidHashingAlgorithm(NonCipherError): pass
 class InvalidConfigurationError(NonCipherError): pass
 class TextTooSmallError(NonCipherError): pass
@@ -70,21 +70,22 @@ def get_hash_of(password,salt,iterations,algorithm='sha256'):
     return hashing_algorithm(password).hexdigest()
 
 class FileByParts:
-    '''Class for reading files by parts'''
+    '''
+    Class for reading files by parts
+
+    arg filename -- name of file with extension.
+        For example picture.png
+            (type must be str)
+
+    arg read_mode -- Read mode for file.
+        For example 'rt' or 'rb'
+            (type must be str)
+
+    kwarg part_size -- The size of the part of the file
+        returned for each iteration
+            (type must be int)
+    '''
     def __init__(self,filename,mode,part_size=1):
-        '''
-        arg filename -- name of file with extension.
-            For example picture.png
-                (type must be str)
-
-        arg read_mode -- Read mode for file.
-            For example 'rt' or 'rb'
-                (type must be str)
-
-        kwarg part_size -- The size of the part of the file
-            returned for each iteration
-                (type must be int)
-        '''
         self.mode = mode
         self.opened_file = open(filename,mode)
         self.part_size = part_size
@@ -111,16 +112,17 @@ class FileByParts:
         self.opened_file.close()
 
 class NonOpen(TextIOWrapper):
-    '''Like a standart TextIOWrapper but after read removes file'''
+    '''
+    Like a standart TextIOWrapper but after read removes file
+
+    kwarg remove_temp -- if True - removes file after read
+        (type must be int(bool))
+    '''
     def __init__(self,file_like_object):
         super().__init__(file_like_object)
         self.flo = file_like_object
 
     def read(self,remove_temp=True):
-        '''
-        kwarg remove_temp -- if True - removes file after read
-            (type must be int(bool))
-        '''
         string = self.flo.read()
         self.flo.close()
         if remove_temp:
@@ -134,17 +136,16 @@ class NonTempFile:
     It can be useful when you encrypt a file that is too large,
     in which case the program will keep everything
     on your disk, and not RAM.
+
+    kwarg string_type -- type of string{symbols} which you want to write in file.
+        must be string_type='str' or string_type='bytes' by default == 'str'
+            (type must be str)
+
+    kwarg filename -- name of temporary file with extension
+        if not specified{None} - filename be random symbols
+            (type must be str)
     '''
     def __init__(self,string_type='str',filename=None):
-        '''
-        kwarg string_type -- type of string{symbols} which you want to write in file.
-            must be string_type='str' or string_type='bytes' by default == 'str'
-                (type must be str)
-
-        kwarg filename -- name of temporary file with extension
-            if not specified{None} - filename be random symbols
-                (type must be str)
-        '''
         self._write_type = 'wb' if string_type == 'bytes' else 'w'
         self._read_type = 'rb' if self._write_type == 'wb' else 'rt'
         self._temp_filename = 'nontempfile_' + token_hex(4) + '.nc_temp' if not filename else filename
@@ -361,8 +362,8 @@ class NonCipher:
                 (type must be int)
         '''
         if not self._block:
-            raise KeysNotSettedError(
-                'For first you have to set keys via non_cipher_object.init()')
+            raise BlockNotSettedError(
+                'For first you have to set block of hashes via non_cipher_object.init()')
         else:
             if isinstance(self._block,tuple):
                 password = self._block
