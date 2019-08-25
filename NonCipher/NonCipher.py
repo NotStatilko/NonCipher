@@ -352,7 +352,7 @@ class NonCipher:
         '''
         function for encrypting and decrypting encrypted by NonCipher strings.
 
-        arg what -- string, generator, file-like bject{readable}
+        arg what -- string, generator, file-like object{readable}
             for encrypting, or iterable object
 
             Note that any iterable object must return one
