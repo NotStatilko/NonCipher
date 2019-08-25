@@ -552,7 +552,7 @@ class NonCipher:
                     else:
                         return total_string
 
-            except OSError as e:
+            except Exception as e:
                 raise NonCipherError('Error in NonCipher!', e,type(e))
 
 if __name__ == '__main__':
