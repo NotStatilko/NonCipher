@@ -23,13 +23,14 @@ class InvalidConfigurationError(NonCipherError): pass
 class TextTooSmallError(NonCipherError): pass
 class NotIterableError(NonCipherError): pass
 
-__version__ = '4.3'
+__version__ = '5.0'
 
-TRY_TO_DECRYPT = ('''y^V\x19D|X\x11\x19^\x17iXR\x05AT\x19E\x16FZAW'''
-    '''\x12\x0bS\x15\x10HT\x07JX\\\x16:JARBP\rR^F\x01'''
-    '''\x05\x00TV\x07\x05PSP\r\x02W\x04\x05\x01\x04\x04'''
-    '''\x04\x01\x02WT\x03\x02\x08\x0f[\x00\x07]R\x00'''
-    '''ZUQUV\x01\x00\x02\r[\x04QR\nSQ\t\x0f\x0fU\x04Q\nUW\tUQUPU''')
+TRY_TO_DECRYPT = ('''*\x08\x06L\x12{\x0c\x12\x18\n\x10b^\x01RK\x06'''
+                  '''N\x17N\x13\\DW\x10TP\x11\x15\x1b[\\\x18]]\x16'''
+                  ''':\x17BPMX]_VCZSU]V\x06\x00\x01\x07V\x07\x02SQ'''
+                  '''\x01\x03\x02\x02Z[\\\x03\x03X\t\x00U\rW\x08\t'''
+                  '''T\x01\r\x04\x02S\x07W\x05WPW\x02T\x06ZTT^\x02'''
+                  '''ZRU\x02\x0bPV\x0f\x00\x02V[\x01''')
 
 def get_hash_of(password,salt,iterations,algorithm='sha256'):
     '''
@@ -112,7 +113,7 @@ class FileByParts:
     def close(self):
         self.opened_file.close()
 
-class NonOpen(TextIOWrapper):
+class RemoveAfterRead(TextIOWrapper):
     '''
     Like a standart TextIOWrapper but after read removes file
 
@@ -130,7 +131,7 @@ class NonOpen(TextIOWrapper):
             os.remove(self.flo.name)
         return string
 
-class NonTempFile:
+class CreateTemporaryFile:
     '''
     This class is needed to create a file
     and write to it the encrypted/decrypted symbols.
@@ -271,7 +272,7 @@ class NonCipher:
             if blocks_count == 1:
                 hash_block = []
             else:
-                hash_block = NonTempFile(
+                hash_block = CreateTemporaryFile(
                     filename='password_block_' + token_hex(4), string_type='bytes'
                 )
             for _ in range(blocks_count):
@@ -287,7 +288,7 @@ class NonCipher:
                 hash = part_block[-1].encode()
                 hash_block += part_block if blocks_count == 1 else ''.join(part_block).encode()
 
-            if isinstance(hash_block,NonTempFile):
+            if isinstance(hash_block,CreateTemporaryFile):
                 hash_block.close()
                 return open(hash_block.filename,'rb')
             else: return hash_block
@@ -306,7 +307,7 @@ class NonCipher:
             encrypting is more than 4096 characters.
             Otherwise, calling this function again does not make sense
 
-            for example:
+            e.g:
                 from NonCipher import NonCipher
                 from random import choice
                 from string import ascii_lowercase as a_l
@@ -334,8 +335,8 @@ class NonCipher:
                 # Hello, World!.......
         '''
         if self._password:
-            self._primary_hash = sha512(get_hash_of(self._password,
-                self._secret_word,self._iterations).encode()).hexdigest().encode()
+            self._primary_hash = get_hash_of(self._password,
+                self._secret_word,self._iterations,'sha512').encode()
 
             for_hashing = (
                 self._password
@@ -343,8 +344,7 @@ class NonCipher:
                 + str(self._iterations).encode()
                 + self._primary_hash
             )
-            self._hash_of_input_data = sha256(for_hashing).hexdigest().encode()
-            self._hash_of_input_data = sha512(self._hash_of_input_data).hexdigest().encode()
+            self._hash_of_input_data = sha512(for_hashing).hexdigest().encode()
 
         self._block = self.__get_hash_blocks(self._primary_hash)
 
@@ -465,23 +465,23 @@ class NonCipher:
                     text_generator.close()
                     password_generator.close()
 
-                    encrypted_parts = []
-                    while len(encrypted_parts) < part_number:
-                        encrypted_parts.append(queue_nc.get()[1])
-                    encrypted_parts.sort()
+                    cipher_parts = []
+                    while len(cipher_parts) < part_number:
+                        cipher_parts.append(queue_nc.get()[1])
+                    cipher_parts.sort()
 
                     password_generator.remove()
 
-                    total_encrypted_filename = token_hex(8) + '.ncfile'
-                    for i in range(len(encrypted_parts)):
-                        with open(total_encrypted_filename,'ab') as f:
-                            encrypted_part = encrypted_parts.pop(0)
+                    total_cipher_filename = token_hex(8) + '.ncfile'
+                    for i in range(len(cipher_parts)):
+                        with open(total_cipher_filename,'ab') as f:
+                            encrypted_part = cipher_parts.pop(0)
                             with open(encrypted_part,'rb') as e_part:
                                 f.write(e_part.read())
                             os.remove(encrypted_part)
 
-                    non_open = NonOpen(open(total_encrypted_filename,'rb'))
-                    return (total_encrypted_filename,non_open)
+                    non_open = RemoveAfterRead(open(total_cipher_filename,'rb'))
+                    return (total_cipher_filename,non_open)
 
                 if write_temp:
                     path_check = '' if not isinstance(what,str) else what
@@ -489,14 +489,14 @@ class NonCipher:
                         if isinstance(self.__cipher_process_part_number,int):
                             random_file_part = token_hex(8)
                             filename = str(self.__cipher_process_part_number).zfill(2) + '_' + token_hex(8) + '.nc_temp'
-                            total_string = NonTempFile(string_type='bytes',filename=filename)
+                            total_string = CreateTemporaryFile(string_type='bytes',filename=filename)
                         else:
-                            total_string = NonTempFile(string_type='bytes')
+                            total_string = CreateTemporaryFile(string_type='bytes')
                     else:
                         if isinstance(what,str) or 'b' not in what.mode:
-                            total_string = NonTempFile(string_type='str',filename=token_hex(8) + '.ncfile')
+                            total_string = CreateTemporaryFile(string_type='str',filename=token_hex(8) + '.ncfile')
                         else:
-                            total_string = NonTempFile(string_type='bytes',filename=token_hex(8) + '.ncfile')
+                            total_string = CreateTemporaryFile(string_type='bytes',filename=token_hex(8) + '.ncfile')
                 else:
                     if isinstance(what,(TextIOWrapper,BufferedReader,FileByParts)):
                         total_string = b'' if 'b' in what.mode else ''
@@ -539,7 +539,7 @@ class NonCipher:
                     os.remove(what.name)
 
                 if write_temp:
-                    non_open = NonOpen(
+                    non_open = RemoveAfterRead(
                         open(total_string._temp_filename,total_string._read_type)
                     )
                     if queue:
@@ -554,6 +554,26 @@ class NonCipher:
 
             except Exception as e:
                 raise NonCipherError('Error in NonCipher!', e,type(e))
+
+    def encrypt(self,*args,**kwargs):
+        '''
+        This function does the same as non_cipher_object.cipher(...),
+        and is needed only for easier reading of code.
+
+        You can view all args and kwargs with
+        running help(non_cipher_object.cipher)
+        '''
+        return self.cipher(*args,**kwargs)
+
+    def decrypt(self,*args,**kwargs):
+        '''
+        This function does the same as non_cipher_object.cipher(...),
+        and is needed only for easier reading of code.
+
+        You can view all args and kwargs with
+        running help(non_cipher_object.cipher)
+        '''
+        return self.cipher(*args,**kwargs)
 
 if __name__ == '__main__':
     string = 'Hello, World!'
