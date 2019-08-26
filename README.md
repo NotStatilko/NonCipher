@@ -18,8 +18,9 @@ nc.init()
 
 The line above in pseudo-code looks like this:
 ```
+primary_hash = password
 for _ in range(iterations{1}):
-    primary_hash = sha512(primary_hash)
+    primary_hash = sha512(primary_hash + secret_word)
 ```
 
 In NonCipher, I called the very first hash "__primary hash__"
