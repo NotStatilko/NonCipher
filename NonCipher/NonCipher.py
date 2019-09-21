@@ -539,6 +539,7 @@ class NonCipher:
                     os.remove(what.name)
 
                 if write_temp:
+                    total_string.close()
                     non_open = RemoveAfterRead(
                         open(total_string._temp_filename,total_string._read_type)
                     )
