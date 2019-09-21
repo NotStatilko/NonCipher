@@ -23,7 +23,7 @@ class InvalidConfigurationError(NonCipherError): pass
 class TextTooSmallError(NonCipherError): pass
 class NotIterableError(NonCipherError): pass
 
-__version__ = '5.0'
+__version__ = '5.1'
 
 TRY_TO_DECRYPT = ('''*\x08\x06L\x12{\x0c\x12\x18\n\x10b^\x01RK\x06'''
                   '''N\x17N\x13\\DW\x10TP\x11\x15\x1b[\\\x18]]\x16'''
