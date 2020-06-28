@@ -1,5 +1,5 @@
 ﻿# <h2> NonCipher — The encryption algorithm that was based on [SafePassword](https://pastebin.com/srfVetG6).
-
+###### Please check out [this issue](https://github.com/NotStatilko/NonCipher/issues/6) before any use
 **SafePassword is an incredibly simple program, the meaning of which rolls down only in one loop. Please read the basic code at the link above, since SafePassword is the main thing in this program.**
 
 # <h5> You can easy install NonCipher via pip
